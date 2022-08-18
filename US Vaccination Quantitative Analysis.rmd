@@ -1,0 +1,414 @@
+---
+title: "Final_Exam_Akash_Kandarkar"
+output: html_document
+date: '2022-05-04'
+---
+
+#US Vaccine data
+```{r}
+library(tidyverse)
+
+usdata <- read_csv("USAvaccinesTS.csv")
+head(usdata)
+usdata<-as.data.frame(usdata)
+```
+
+```{r}
+summary(usdata)
+
+#DPT = First dose of Diphtheria/Pertussis/Tetanus vaccine
+#Polio = Polio third dose
+#MMR = Measles first dose 
+#HepB = Hepatitis B, Birth Dose
+
+#Data is distributed from year 1980 to 2017
+#Higest rate among all vaccines considering all records regardles of year us 99 % in First dose of Diphtheria/Pertussis/Tetanus vaccine.
+
+#DPT data distribution is shows normal distribution as mean and median are closely located
+#Lowest every vaccination rate was found in Hepatitis B, Birth Dose.
+
+
+```
+
+```{r}
+tail(usdata)
+#Getting data from last 5 years records to see lowest rates at the time of conclusion of the time series.
+```
+
+
+```{r}
+usdataSeries <- ts(usdata[,2:5], start=c(1980), frequency=1)
+plot(usdataSeries)
+
+#Time series data
+
+#For DPT,Polio ans MMR we can see that there is significant drop in vaccination rate in 1987-88
+#For Polio ans MMR we can see that there is significant drop in vaccination rate again in 1990
+
+#HepB has shown not shown sginificant growth from 1980 to 2002-03
+#after that there is sudden growth in vacciantion rates till 2015
+
+```
+
+```{r}
+plot.ts(diff(usdataSeries))
+
+#We can notice here the difference in vaccination rates for HepB in 2002-03
+#There is change in rates for HepB througout the data i.e 1980-2017 as compared to other vaccination rates.
+#Polio vaccination have shown constant vaccination rates after 1992
+```
+
+```{r}
+sd(usdataSeries[,"HepB"]) 
+#Standard deviation in Hepatitis B, Birth Dose is 22.53, which shows it have highest volatility among the all vaccines.
+```
+
+```{r}
+sd(usdataSeries[,"Polio"])
+#Standard deviation in Polio third dose is 15.35266, which shows it have volatility less than Hepatitis B, but greater than rest.
+```
+```{r}
+sd(usdataSeries[,"DPT"])
+#Standard deviation in First dose of Diphtheria/Pertussis/Tetanus vaccine is 5.867673, which shows it have less volatility
+
+```
+
+```{r}
+sd(usdataSeries[,"MMR"])
+#Standard deviation in Measles first dose vaccine is 4.187718, which shows it have lowest volatility
+```
+
+
+#California School District Data
+
+```{r}
+#Data Extraction
+DistrictData <- read_csv("DistrictData.csv")
+n <- 700
+dataN <- nrow(DistrictData)
+
+#Sample from data set
+set.seed(8364) #Use last 4 digits of your SU ID
+for (i in 1:10) {
+  dlist <- sample(1:dataN,size=n)
+  districts <- DistrictData[dlist,c(1:12)]
+  filename <- paste0("districts",i,".RData")
+  save(districts,file=filename)
+}
+str(districts)
+```
+
+
+```{r}
+summary(districts)
+```
+
+#1
+```{r}
+#The WODPT , WOPolio, WOMMR  and WOHepB  column provides data regarding individuals without DPT,Polio, MMR  and HepB  vaccines so this mean of these columns must be subtracted from 1 to get the data with DPT,Polio, MMR  and HepB   vaccines.
+
+WODPT_mean <- (1-mean(districts$WODPT))*100
+WODPT_mean
+```
+
+
+```{r}
+WOPolio_mean <- (1-mean(districts$WOPolio))*100
+WOPolio_mean
+```
+
+```{r}
+WOMMR_mean <- (1-mean(districts$WOMMR))*100
+WOMMR_mean
+```
+
+
+```{r}
+WOHepB_mean <- (1-mean(districts$WOHepB))*100
+WOHepB_mean
+```
+
+```{r}
+vaccination_Rates <-c("DPT","Polio","MMR","HepB") 
+vaccination_Rates <- data.frame(WODPT_mean,WOPolio_mean,WOMMR_mean,WOHepB_mean)
+vaccination_Rates
+```
+
+
+#2
+
+```{r}
+library(reshape2)
+cali_rates <- c(WODPT_mean,WOHepB_mean,
+                WOPolio_mean,WOMMR_mean)
+
+vacc <- c("DTP","HepB","Polio","MMR")
+us_rates <- c(mean(usdata$DPT),mean(usdata$HepB),
+        mean(usdata$Polio),mean(usdata$MMR))
+
+Us_diff_Cali <- us_rates-cali_rates
+
+diff_in_Rates <- data.frame(vacc,cali_rates,us_rates,Us_diff_Cali)
+diff_in_Rates
+
+#For DPT vaccine, the overall US vaccination rates stand at 94.05% while that in California districts are 89.99%. 
+#There is quite a difference between these two percentages.
+
+#For HepB vaccine, the overall US vaccination rates stand at 34.21% while that in California districts are 92.42%. 
+#In case of HepB vaccine the California district vaccinations rates are significantly higher.
+
+#For MMR vaccine, the overall US vaccination rates stand at 91.23% while that in California districts are 89.94%. 
+#In case of MMR vaccine the percentage values are closer between USA and California.
+
+#For Polio vaccine, the overall US vaccination rates stand at 87.15% while that in California districts are 90.40%. 
+#In case of Polio vaccine, the percentage values are closer between USA and California.
+
+
+```
+
+```{r}
+
+#Lets PLot the difference to see how those difference appear on board.
+
+install.packages("reshape")
+library(reshape)
+library(ggplot2)
+library(Hmisc)
+ggplot(melt(data.frame(cali_rates,us_rates,vacc),id.vars = "vacc"),aes(x=vacc, y=value, fill=variable)) +    geom_bar(stat='identity', position='dodge')
+```
+
+
+#3
+
+```{r}
+str(districts)
+```
+
+
+```{r}
+hist(districts$ChPov)
+
+```
+
+```{r}
+hist(districts$Enrolled)
+#The histogram for TotSch shows that data is skewed to the right.
+```
+```{r}
+hist(districts$TotSch)
+
+#The histogram for TotSch shows that data is skewed to the right.
+```
+
+```{r}
+cor(districts[c(7:10,12)])
+#cor() funtion creates a correlation matrix with ChPov, Meal, FamPov, Enrolled, and TotSch variables from dataset districts
+
+#We can see from the correlation matrix that TotSch and Enrolled have a poor correlation with all the other variables, but the other variables have a strong link. To lessen the skewness of data, we will need to modify the variables using the suitable transformation function.
+
+```
+
+
+
+```{r}
+library(e1071)
+
+skewness(districts$Enrolled)#20.77401
+skewness(districts$TotSch)#20.30251
+
+skewness(sqrt(districts$Enrolled)) #4.186683
+skewness(sqrt(districts$TotSch)) #4.826241
+
+
+#Using log for transformation
+skewness(log(districts$Enrolled)) #-0.05603821
+skewness(log(districts$TotSch)) #0.6057657
+
+
+#Using atan for transformation
+skewness(atan(districts$Enrolled)) #-1.981354
+skewness(atan(districts$TotSch)) #-0.1581528
+
+
+#Using reciprocal for transformation
+skewness(1/districts$Enrolled) #1.985216
+skewness(1/districts$TotSch)# 0.2635157
+
+
+#Creating new columns in the district dataframe containing transformed values for Enrolled and TotSch
+
+districts$logEnrolled <- log(districts$Enrolled)
+districts$atanTotSch <- atan(districts$TotSch)
+
+str(districts)
+
+cor(districts[c(7:10,12)])
+cor(districts[c(7:9,14,15)])
+
+```
+
+
+```{r}
+#Logistic multiple regression
+
+#Frequentist
+
+glmOut <- glm(Complete ~ logEnrolled + atanTotSch + ChPov + Meal + FamPov, family = binomial(),data=districts)
+summary(glmOut)
+#LogEnrolled has a coefficient of 1.7735, 
+#atanTotSch has a coefficient of -15.6983, 
+#ChPov has a coefficient of 3.467, 
+#Meal has a coefficient of -2.4078, 
+#FamPov has a coefficient of -6.8174.
+
+#Only logEnrolled and atanTotSch are significant variables with coefficients greater than zero and p-values less than alpha value(0.05). This means that both independent variables are statistically significant in predicting the dependent, and we can reject the null hypothesis that the independent variables' coefficients are zero.
+
+#Because we are using logistic regression, the coefficients of the independent variables are log-odds.
+
+exp(coef(glmOut))
+#The above code converts the log-odds to plain odds.
+
+#The plain-odds for logEnrolled are 5.89:1 and that of atanTotSch is 1.521586e-07:1
+
+exp(confint(glmOut))
+
+
+#The confidence interval for logEnrolled ranges from 3.053952e+00 to 1.227794e+01 
+#The confidence interval for atanTotSch ranges from 2.187089e-10 to 2.767754e-05
+
+#The confidence interval is extremely wide, indicating a high level of uncertainty.
+
+
+```
+
+```{r}
+#Bayesian 
+
+#install.packages('MCMCpack')
+library(MCMCpack)
+districts$Completenew <- as.numeric(districts$Complete)
+
+bayesLogitOut <- MCMClogit(formula = Completenew ~ logEnrolled + atanTotSch, data = districts)
+summary(bayesLogitOut)
+
+#The coefficients for the INDEPENDENT variables can be found in the output's 'Mean' column. 
+#The mean logEnrolled coefficient is 1.666, and the atanTotSch coefficient is -15.225; 
+#these results are similar to those found using classical logistic regression.
+
+#The quantiles for each coefficient, including the 2.5 percent and 97.5 percent quantiles, are displayed in the second section of the output. The 95 percent highest density interval (HDI) for a particular coefficient is the area between the 2.5 percent and 97.5 percent quantiles for that coefficient.
+
+
+#For logEnrolled, the 95 percent HDI interval is between 1.001 and 2.329, 
+#whereas for atanTotSch, it is between -21.186 and -17.077. 
+#Because none of these ranges straddle 0, we can rule out the null hypothesis that the coefficients of logEnrolled and atanTotSch are both zero.
+```
+
+
+```{r}
+
+#Lets plot these HDI to get an idea about different analysis
+plot(bayesLogitOut)
+
+logEnrolledLogOdds <- as.matrix(bayesLogitOut[,"logEnrolled"])
+
+hist(logEnrolledLogOdds)
+abline(v=quantile(logEnrolledLogOdds,c(0.025)),col="red")
+abline(v=quantile(logEnrolledLogOdds,c(0.975)),col="red")
+abline(v=quantile(coef(glmOut)["logEnrolled"]), col="green")
+
+#The two red lines show the extent of the 95% HDI for these posterior estimates.
+#The gree line shows the GLM estimate for the log odds for logEnrolled. 
+#That estimate is reasonably close to the center of the posterior distribution. 
+
+```
+
+```{r}
+#For Total number of different schools in the district
+
+atanTotSchLogOdds <- as.matrix(bayesLogitOut[,"atanTotSch"])
+
+hist(atanTotSchLogOdds)
+abline(v=quantile(atanTotSchLogOdds,c(0.025)),col="red")
+abline(v=quantile(atanTotSchLogOdds,c(0.975)),col="red")
+abline(v=quantile(coef(glmOut)["atanTotSch"]), col="green")
+
+#The two red lines show the extent of the 95% HDI for these posterior estimates.
+#The green line shows the GLM estimate for the log odds for logEnrolled. 
+#That estimate is reasonably close to the center of the posterior distribution.
+```
+
+
+```{r}
+MealLogOdds <- as.matrix(bayesLogitOut[,"Meal"])
+
+hist(MealLogOdds)
+abline(v=quantile(MealLogOdds,c(0.025)),col="red")
+abline(v=quantile(MealLogOdds,c(0.975)),col="red")
+abline(v=quantile(coef(glmOut)["Meal"]), col="green")
+
+#The two red lines show the extent of the 95% HDI for these posterior estimates.
+#The green line shows the GLM estimate for the log odds for logEnrolled. 
+#That estimate is reasonably close to the center of the posterior distribution.
+
+```
+
+
+```{r}
+#3.	What variables predict whether a district’s reporting was complete?
+
+#In predicting whether a district's reporting was complete,
+#the Enrolled variable after log transformation,
+#the TotSch variable after atan transformationvariable are crucial.
+str(districts)
+```
+
+
+
+```{r}
+#4.	What variables predict the percentage of all enrolled students with up-to-date vaccines?
+
+
+#Linear regression
+
+freqmodel <- lm(formula = ToDate ~ logEnrolled + atanTotSch + ChPov + Meal + FamPov, data=districts)
+summary(freqmodel)
+
+#The coefficients in the “Estimate” column show the B-weights for each predictor, the p-value
+#for logEnrolled and Meal are less than 0.05 and hence these variables are significant.
+
+#The overall p-value of the model is less than the alpha threshold meaning we can reject the null hypothesis according 
+#to which the R-squared value is 0 in the population.
+
+#The adjusted R-squared for this analysis is 0.1475, which means that the independent variables accounted for about 14.75% of the variability in ToDate.
+
+
+#logEnrolled and  Meal are significant in predicting ToDate variable
+```
+
+
+```{r}
+#Bayesian Regression analysis
+
+baytrees <- lmBF(ToDate ~ logEnrolled + atanTotSch + Meal, data=districts, posterior = TRUE, iterations=10000)
+summary(baytrees)
+
+#The output generated has 2 sections;
+
+#In the output displayed above, we have parameter estimates for the B-weights of each of our predictions 
+#(the column labeled “Mean”). 
+
+
+#You will notice that the values are quite similar, to what was produced by the lm() function. 
+#In the second section, we have the 2.5% and 97.5% boundaries of the HDI for each of the B-weights. 
+#As with previous considerations of the HDI, these boundaries mark the edges of the central region of the posterior distribution for each B-weight. 
+
+
+#For logEnrolled, the 95 percent HDI interval is between 0.01932 to  0.042460, 
+#whereas for atanTotSch, it is between -0.12175 to -0.002406. 
+
+#Because none of these ranges straddle 0, we can rule out the null hypothesis that the coefficients of logEnrolled and atanTotSch are both zero.
+
+#The 95% HDI for the B-weight of logEnrolled and atanTotSch does not overlap with 0, providing evidence that the population value of that we can reject null hypothisis as we have sufficent evidance
+
+```
+
